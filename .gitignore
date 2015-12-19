@@ -2,4 +2,4 @@
 /out
 /.idea
 Chess.iml
-src/net
+src/net/Server.java
