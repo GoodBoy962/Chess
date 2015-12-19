@@ -7,12 +7,8 @@ import enums.FigureColor;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Board extends JFrame {
 
@@ -21,7 +17,6 @@ public class Board extends JFrame {
     private FigureColor[][] field;
     private boolean whiteKingInCheck;
     private boolean blackKingInCheck;
-    //o - white, 1 - black
     private byte turn;
     private JButton selected;
     private int selectedI;
@@ -34,12 +29,7 @@ public class Board extends JFrame {
     private boolean blackRightCastleMotion;
     private BufferedReader is;
     private PrintWriter pw;
-    List term = new ArrayList();
     private int yourTurn;
-
-    public void addMessage(String s) {
-        term.add(s + "\n");
-    }
 
     public Board(PrintWriter pw, BufferedReader is, int yourTurn) throws IOException {
         this.yourTurn = yourTurn;
@@ -222,7 +212,6 @@ public class Board extends JFrame {
                             else if (field[selectedI][selectedJ].figure == Figure.KING) {
                                 if (field[selectedI][selectedJ].color == Color.WHITE) {
                                     if (!whiteKingMotion && i == selectedI && j == selectedJ + 2 && !whiteRightCastleMotion && field[i][j].figure == Figure.NON && selectedI == 7 && selectedJ == 4) {
-//                                        doRockerovka(i, j, button, -1, 1);
                                         try {
                                             doChanges(i, j, button, Figure.NON, -1);
                                         } catch (IOException e1) {
@@ -231,7 +220,6 @@ public class Board extends JFrame {
                                         whiteKingMotion = true;
                                         whiteRightCastleMotion = true;
                                     } else if (!whiteKingMotion && i == selectedI && j == selectedJ - 2 && !whiteLeftCastleMotion && field[i][j].figure == Figure.NON && selectedI == 7 && selectedJ == 4) {
-//                                        doRockerovka(i, j, button, 2, 0);
                                         try {
                                             doChanges(i, j, button, Figure.NON, 2);
                                         } catch (IOException e1) {
@@ -258,7 +246,6 @@ public class Board extends JFrame {
                                         }
                                     }
                                 } else if (!blackKingMotion && i == selectedI && j == selectedJ + 2 && !blackRightCastleMotion && field[i][j].figure == Figure.NON && selectedI == 0 && selectedJ == 4) {
-//                                    doRockerovka(i, j, button, -1, 1);
                                     try {
                                         doChanges(i, j, button, Figure.NON, -1);
                                     } catch (IOException e1) {
@@ -267,7 +254,6 @@ public class Board extends JFrame {
                                     blackKingMotion = true;
                                     blackRightCastleMotion = true;
                                 } else if (!blackKingMotion && i == selectedI && j == selectedJ - 2 && !blackLeftCastleMotion && field[i][j].figure == Figure.NON && selectedI == 0 && selectedJ == 4) {
-//                                    doRockerovka(i, j, button, 2, 0);
                                     try {
                                         doChanges(i, j, button, Figure.NON, 2);
                                     } catch (IOException e1) {
@@ -293,58 +279,8 @@ public class Board extends JFrame {
                                         }
                                     }
                             }
-//                            if (turn!=yourTurn) {
-//                                pw.write(i * 1000 + j * 100 + selectedI * 10 + selectedJ);
-//                                pw.flush();
-////                                turn ^= 1;
-//                                Integer res = null;
-//                                try {
-//                                    res = is.read();
-//                                } catch (IOException e1) {
-//                                    e1.printStackTrace();
-//                                }
-//                                String s = res.toString();
-//                                int i1 = Character.getNumericValue(s.charAt(0));
-//                                int j1 = Character.getNumericValue(s.charAt(1));
-//                                int selectedI1 = Character.getNumericValue(s.charAt(2));
-//                                int selectedJ1 = Character.getNumericValue(s.charAt(3));
-//                                field[i1][j1].figure = field[selectedI1][selectedJ1].figure;
-//                                field[selectedI1][selectedJ1].figure = Figure.NON;
-//                                field[i1][j1].color = field[selectedI1][selectedJ1].color;
-//                                field[selectedI1][selectedJ1].color = Color.NON;
-//                                setImageForButton(getButton(selectedI1, selectedJ1), selectedI1, selectedJ1);
-//                                setImageForButton(getButton(i1, j1), i1, j1);
-//                                turn ^= 1;
-//                            }
                             selected = null;
                         }
-
-                    }
-                });
-                jb.addMouseListener(new MouseListener() {
-
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-
-                    }
-
-                    @Override
-                    public void mousePressed(MouseEvent e) {
-
-                    }
-
-                    @Override
-                    public void mouseReleased(MouseEvent e) {
-
-                    }
-
-                    @Override
-                    public void mouseEntered(MouseEvent e) {
-
-                    }
-
-                    @Override
-                    public void mouseExited(MouseEvent e) {
 
                     }
                 });
@@ -356,7 +292,7 @@ public class Board extends JFrame {
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
-        if (yourTurn != turn) {
+        if (!yourTurn()) {
             Integer a = is.read();
             String s = a.toString();
             int i1 = Character.getNumericValue(s.charAt(0));
@@ -446,18 +382,6 @@ public class Board extends JFrame {
     }
 
     private void doChanges(int i, int j, JButton button, Figure figure, int side) throws IOException {
-//        field[i][j].figure = figure;
-//        field[selectedI][selectedJ].figure = Figure.NON;
-//        field[i][j].color = field[selectedI][selectedJ].color;
-//        field[selectedI][selectedJ].color = Color.NON;
-//        setImageForButton(selected, selectedI, selectedJ);
-//        setImageForButton(button, i, j);
-//        Integer s1 = i * 1000 + j * 100 + selectedI * 10 + selectedJ;
-//                        turn^=1;
-//        pw.write(s1);
-//        pw.flush();
-//        turn ^= 1;
-//        Integer res = is.read();
         Integer s1;
         if (side == 0) {
             s1 = doStep(i, j, button, figure);
@@ -493,16 +417,6 @@ public class Board extends JFrame {
             System.out.println("получил и делаю рокеровочку " + j1 + "  " + sideG);
             doRockerovka(i1, j1, getButton(i1, j1), sideG);
         }
-//        int i1 = Character.getNumericValue(s.charAt(0));
-//        int j1 = Character.getNumericValue(s.charAt(1));
-//        int selectedI1 = Character.getNumericValue(s.charAt(2));
-//        int selectedJ1 = Character.getNumericValue(s.charAt(3));
-//        field[i1][j1].figure = field[selectedI1][selectedJ1].figure;
-//        field[selectedI1][selectedJ1].figure = Figure.NON;
-//        field[i1][j1].color = field[selectedI1][selectedJ1].color;
-//        field[selectedI1][selectedJ1].color = Color.NON;
-//        setImageForButton(getButton(selectedI1, selectedJ1), selectedI1, selectedJ1);
-//        setImageForButton(getButton(i1, j1), i1, j1);
         turn ^= 1;
 
     }
@@ -582,7 +496,6 @@ public class Board extends JFrame {
     }
 
     private Integer doRockerovka(int i, int j, JButton button, int side) {
-        System.out.println("рокеровка бля");
         System.out.println(i + " " + j + " " + side);
         field[selectedI][selectedJ].figure = Figure.NON;
         field[i][j].color = field[selectedI][selectedJ].color;
@@ -594,10 +507,8 @@ public class Board extends JFrame {
         field[i][j + (int) Math.signum(side)].color = field[i][j - side].color;
         field[i][j + (int) Math.signum(side)].figure = Figure.CASTLE;
         field[i][j - side].color = Color.NON;
-//        setImageForButton(((JButton) getContentPane().getComponent((i) * 8 + (j + side))), i, j + side);
         setImageForButton(((JButton) getContentPane().getComponent((i) * 8 + (j + (int) Math.signum(side)))), i, j + (int) Math.signum(side));
         setImageForButton(((JButton) getContentPane().getComponent((i) * 8 + j - side)), i, j - side);
-//        turn ^= 1;
         Integer s1 = Math.abs(side) * 10000 + (i * 1000 + j * 100 + selectedI * 10 + selectedJ);
         System.out.println(s1);
         return s1;
@@ -633,14 +544,14 @@ public class Board extends JFrame {
         } else {
             tern = 1;
         }
-//        boolean flag = true;
-//        while (flag) {
-//            Integer when = br.read();
-//            System.out.println(when);
-//            if (when == 50) {
-//                flag = false;
-//            }
-//        }
+        boolean flag = true;
+        while (flag) {
+            Integer when = br.read();
+            System.out.println(when);
+            if (when == 48) {
+                flag = false;
+            }
+        }
         System.out.println(tern);
         System.out.println("game starts");
         new Board(pw, br, tern);
