@@ -17,7 +17,6 @@ public class ServerThread extends Thread {
         System.out.println("Game created");
     }
 
-
     @Override
     public void run() {
         while (true) {
