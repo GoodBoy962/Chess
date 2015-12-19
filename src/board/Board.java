@@ -5,10 +5,10 @@ import enums.Figure;
 import enums.FigureColor;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Board extends JFrame {
 
@@ -30,6 +30,9 @@ public class Board extends JFrame {
     private BufferedReader is;
     private PrintWriter pw;
     private int yourTurn;
+    private int kingI;
+    private int kingJ;
+    private List<String> opponentFigures;
 
     public Board(PrintWriter pw, BufferedReader is, int yourTurn) throws IOException {
         this.yourTurn = yourTurn;
@@ -45,6 +48,21 @@ public class Board extends JFrame {
         blackLeftCastleMotion = false;
         blackRightCastleMotion = false;
         turn = 0;
+        kingJ = 4;
+        kingI = (7 + yourTurn) % 8;
+        opponentFigures = new ArrayList<>();
+        if (!yourTurn()) {
+            for (int i = 0; i < 7; i++) {
+                opponentFigures.add("6" + i);
+                opponentFigures.add("7" + i);
+            }
+
+        } else {
+            for (int i = 0; i < 7; i++) {
+                opponentFigures.add("1" + i);
+                opponentFigures.add("0" + i);
+            }
+        }
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
                 JButton jb = new JButton();
@@ -59,163 +77,160 @@ public class Board extends JFrame {
                 setImageForButton(jb, i, j);
                 jb.setContentAreaFilled(false);
                 jb.setOpaque(true);
-                jb.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        JButton button = (JButton) e.getSource();
-                        int i = button.getY() / buttonSize;
-                        int j = button.getX() / buttonSize;
-                        if (selected == null) {
-                            if (field[i][j].color == Color.WHITE && turn == 0 || field[i][j].color == Color.BLACK && turn == 1) {
-                                selected = button;
-                                selectedI = i;
-                                selectedJ = j;
-                                selected.setFocusPainted(true);
-                            }
-                        } else {
-                            try {
-                                // TODO Логика пешки
-                                if (field[selectedI][selectedJ].figure == Figure.PONE) {
-                                    if (field[selectedI][selectedJ].color == Color.WHITE) {
-                                        if (j == selectedJ && i == selectedI - 1 && field[i][j].figure == Figure.NON ||
-                                                j == selectedJ && selectedI == 6 && i == selectedI - 2 && field[i][j].figure == Figure.NON && field[i + 1][j].figure == Figure.NON ||
-                                                ((j == selectedJ + 1 || j == selectedJ - 1) && i == selectedI - 1 && field[i][j].figure != Figure.NON &&
-                                                        field[i][j].color == Color.BLACK)) {
-                                            try {
-                                                doChanges(i, j, button, Figure.PONE, 0);
-                                            } catch (IOException e1) {
-                                                e1.printStackTrace();
-                                            }
-                                        }
-                                    } else if (j == selectedJ && i == selectedI + 1 && field[i][j].figure == Figure.NON ||
-                                            j == selectedJ && selectedI == 1 && i == selectedI + 2 && field[i][j].figure == Figure.NON && field[i - 1][j].figure == Figure.NON ||
-                                            ((j == selectedJ + 1 || j == selectedJ - 1) && i == selectedI + 1 && field[i][j].figure != Figure.NON &&
-                                                    field[i][j].color == Color.WHITE)) {
+                jb.addActionListener(e -> {
+                    JButton button = (JButton) e.getSource();
+                    int i1 = button.getY() / buttonSize;
+                    int j1 = button.getX() / buttonSize;
+                    if (selected == null) {
+                        if (field[i1][j1].color == Color.WHITE && turn == 0 || field[i1][j1].color == Color.BLACK && turn == 1) {
+                            selected = button;
+                            selectedI = i1;
+                            selectedJ = j1;
+                            selected.setFocusPainted(true);
+                        }
+                    } else {
+                        try {
+                            // TODO Логика пешки
+                            if (field[selectedI][selectedJ].figure == Figure.PONE) {
+                                if (field[selectedI][selectedJ].color == Color.WHITE) {
+                                    if (j1 == selectedJ && i1 == selectedI - 1 && field[i1][j1].figure == Figure.NON ||
+                                            j1 == selectedJ && selectedI == 6 && i1 == selectedI - 2 && field[i1][j1].figure == Figure.NON && field[i1 + 1][j1].figure == Figure.NON ||
+                                            ((j1 == selectedJ + 1 || j1 == selectedJ - 1) && i1 == selectedI - 1 && field[i1][j1].figure != Figure.NON &&
+                                                    field[i1][j1].color == Color.BLACK)) {
                                         try {
-                                            doChanges(i, j, button, Figure.PONE, 0);
+                                            doChanges(i1, j1, button, Figure.PONE, 0);
                                         } catch (IOException e1) {
                                             e1.printStackTrace();
                                         }
                                     }
-
-                                }
-
-                                //TODO логика ладьи
-                                else if (field[selectedI][selectedJ].figure == Figure.CASTLE) {
-                                    if (field[selectedI][selectedJ].color == Color.WHITE) {
-                                        if (((j == selectedJ && i != selectedI && noObstacleForCastleI(i, j)) || (j != selectedJ && i == selectedI && noObstacleForCastleJ(i, j)))
-                                                && field[i][j].color != Color.WHITE) {
-                                            doChanges(i, j, button, Figure.CASTLE, 0);
-                                            if (i == 0 && j == 7) {
-                                                whiteLeftCastleMotion = true;
-                                            } else if (i == 7 && j == 7) {
-                                                whiteRightCastleMotion = true;
-                                            }
-                                        }
-                                    } else {
-                                        if (((j == selectedJ && i != selectedI && noObstacleForCastleI(i, j)) || (j != selectedJ && i == selectedI && noObstacleForCastleJ(i, j)))
-                                                && field[i][j].color != Color.BLACK) {
-                                            doChanges(i, j, button, Figure.CASTLE, 0);
-                                            if (i == 0 && j == 0) {
-                                                blackLeftCastleMotion = true;
-                                            } else if (i == 7 && j == 0) {
-                                                blackRightCastleMotion = true;
-                                            }
-                                        }
-
-                                    }
-
-                                }
-
-                                //TODO логика коня
-                                else if (field[selectedI][selectedJ].figure == Figure.KNIGHT) {
-                                    if (field[selectedI][selectedJ].color == Color.WHITE) {
-                                        if ((j == selectedJ + 1 || j == selectedJ - 1) && (i == selectedI + 2 || i == selectedI - 2) ||
-                                                (j == selectedJ + 2 || j == selectedJ - 2) && (i == selectedI + 1 || i == selectedI - 1) &&
-                                                        field[i][j].color != Color.WHITE) {
-                                            doChanges(i, j, button, Figure.KNIGHT, 0);
-                                        }
-                                    } else if ((j == selectedJ + 1 || j == selectedJ - 1) && (i == selectedI + 2 || i == selectedI - 2) ||
-                                            (j == selectedJ + 2 || j == selectedJ - 2) && (i == selectedI + 1 || i == selectedI - 1) &&
-                                                    field[i][j].color != Color.BLACK) {
-                                        doChanges(i, j, button, Figure.KNIGHT, 0);
+                                } else if (j1 == selectedJ && i1 == selectedI + 1 && field[i1][j1].figure == Figure.NON ||
+                                        j1 == selectedJ && selectedI == 1 && i1 == selectedI + 2 && field[i1][j1].figure == Figure.NON && field[i1 - 1][j1].figure == Figure.NON ||
+                                        ((j1 == selectedJ + 1 || j1 == selectedJ - 1) && i1 == selectedI + 1 && field[i1][j1].figure != Figure.NON &&
+                                                field[i1][j1].color == Color.WHITE)) {
+                                    try {
+                                        doChanges(i1, j1, button, Figure.PONE, 0);
+                                    } catch (IOException e1) {
+                                        e1.printStackTrace();
                                     }
                                 }
 
-                                //TODO логика офицера
-                                else if (field[selectedI][selectedJ].figure == Figure.BISHOP) {
-                                    if (field[selectedI][selectedJ].color == Color.WHITE) {
-                                        if (Math.abs(selectedI - i) == Math.abs(selectedJ - j) && field[i][j].color != Color.WHITE && noObstacleForBishop(i, j)) {
-                                            doChanges(i, j, button, Figure.BISHOP, 0);
-                                        }
-                                    } else if (Math.abs(selectedI - i) == Math.abs(selectedJ - j) && field[i][j].color != Color.BLACK && noObstacleForBishop(i, j)) {
-                                        doChanges(i, j, button, Figure.BISHOP, 0);
-
-                                    }
-                                }
-                                //TODO логика ферзя
-                                else if (field[selectedI][selectedJ].figure == Figure.QUEEN) {
-                                    if (field[selectedI][selectedJ].color == Color.WHITE) {
-                                        if (((j == selectedJ && i != selectedI && noObstacleForCastleI(i, j)) || (j != selectedJ && i == selectedI && noObstacleForCastleJ(i, j)))
-                                                && field[i][j].color != Color.WHITE) {
-                                            doChanges(i, j, button, Figure.QUEEN, 0);
-                                        } else if (Math.abs(selectedI - i) == Math.abs(selectedJ - j) && field[i][j].color != Color.WHITE && noObstacleForBishop(i, j)) {
-                                            doChanges(i, j, button, Figure.QUEEN, 0);
-                                        }
-                                    } else if (((j == selectedJ && i != selectedI && noObstacleForCastleI(i, j)) || (j != selectedJ && i == selectedI && noObstacleForCastleJ(i, j)))
-                                            && field[i][j].color != Color.BLACK) {
-                                        doChanges(i, j, button, Figure.QUEEN, 0);
-                                    } else if (Math.abs(selectedI - i) == Math.abs(selectedJ - j) && field[i][j].color != Color.BLACK && noObstacleForBishop(i, j)) {
-                                        doChanges(i, j, button, Figure.QUEEN, 0);
-
-                                    }
-                                }
-
-                                //TODO локига короля
-                                else if (field[selectedI][selectedJ].figure == Figure.KING) {
-                                    if (field[selectedI][selectedJ].color == Color.WHITE) {
-                                        if (!whiteKingMotion && i == selectedI && j == selectedJ + 2 && !whiteRightCastleMotion && field[i][j].figure == Figure.NON && selectedI == 7 && selectedJ == 4) {
-                                            doChanges(i, j, button, Figure.NON, -1);
-                                            whiteKingMotion = true;
-                                            whiteRightCastleMotion = true;
-                                        } else if (!whiteKingMotion && i == selectedI && j == selectedJ - 2 && !whiteLeftCastleMotion && field[i][j].figure == Figure.NON && selectedI == 7 && selectedJ == 4) {
-                                            doChanges(i, j, button, Figure.NON, 2);
-                                            whiteKingMotion = true;
-                                            whiteLeftCastleMotion = true;
-                                        } else if ((Math.abs(i - selectedI) == 1 && Math.abs(j - selectedJ) == 1 || Math.abs(i - selectedI) == 0 && Math.abs(j - selectedJ) == 1 || Math.abs(i - selectedI) == 1 && Math.abs(j - selectedJ) == 0)) {
-                                            if (((j == selectedJ && i != selectedI && noObstacleForCastleI(i, j)) || (j != selectedJ && i == selectedI && noObstacleForCastleJ(i, j)))
-                                                    && field[i][j].color != Color.WHITE) {
-                                                whiteKingMotion = true;
-                                                doChanges(i, j, button, Figure.KING, 0);
-
-                                            } else if (Math.abs(selectedI - i) == Math.abs(selectedJ - j) && field[i][j].color != Color.WHITE && noObstacleForBishop(i, j)) {
-                                                whiteKingMotion = true;
-                                                doChanges(i, j, button, Figure.KING, 0);
-
-                                            }
-                                        }
-                                    } else if (!blackKingMotion && i == selectedI && j == selectedJ + 2 && !blackRightCastleMotion && field[i][j].figure == Figure.NON && selectedI == 0 && selectedJ == 4) {
-                                        doChanges(i, j, button, Figure.NON, -1);
-                                        blackKingMotion = true;
-                                        blackRightCastleMotion = true;
-                                    } else if (!blackKingMotion && i == selectedI && j == selectedJ - 2 && !blackLeftCastleMotion && field[i][j].figure == Figure.NON && selectedI == 0 && selectedJ == 4) {
-                                        doChanges(i, j, button, Figure.NON, 2);
-                                        blackKingMotion = true;
-                                        blackLeftCastleMotion = true;
-                                    } else if ((Math.abs(i - selectedI) == 1 && Math.abs(j - selectedJ) == 1 || Math.abs(i - selectedI) == 0 && Math.abs(j - selectedJ) == 1 || Math.abs(i - selectedI) == 1 && Math.abs(j - selectedJ) == 0))
-                                        if (((j == selectedJ && i != selectedI && noObstacleForCastleI(i, j)) || (j != selectedJ && i == selectedI && noObstacleForCastleJ(i, j)))
-                                                && field[i][j].color != Color.BLACK) {
-                                            blackKingMotion = true;
-                                            doChanges(i, j, button, Figure.KING, 0);
-                                        } else if (Math.abs(selectedI - i) == Math.abs(selectedJ - j) && field[i][j].color != Color.BLACK && noObstacleForBishop(i, j)) {
-                                            blackKingMotion = true;
-                                            doChanges(i, j, button, Figure.KING, 0);
-                                        }
-                                }
-                                selected = null;
-                            } catch (IOException e1) {
-                                e1.printStackTrace();
                             }
+
+                            //TODO логика ладьи
+                            else if (field[selectedI][selectedJ].figure == Figure.CASTLE) {
+                                if (field[selectedI][selectedJ].color == Color.WHITE) {
+                                    if (((j1 == selectedJ && i1 != selectedI && noObstacleForCastleI(i1, j1)) || (j1 != selectedJ && i1 == selectedI && noObstacleForCastleJ(i1, j1)))
+                                            && field[i1][j1].color != Color.WHITE) {
+                                        doChanges(i1, j1, button, Figure.CASTLE, 0);
+                                        if (i1 == 0 && j1 == 7) {
+                                            whiteLeftCastleMotion = true;
+                                        } else if (i1 == 7 && j1 == 7) {
+                                            whiteRightCastleMotion = true;
+                                        }
+                                    }
+                                } else {
+                                    if (((j1 == selectedJ && i1 != selectedI && noObstacleForCastleI(i1, j1)) || (j1 != selectedJ && i1 == selectedI && noObstacleForCastleJ(i1, j1)))
+                                            && field[i1][j1].color != Color.BLACK) {
+                                        doChanges(i1, j1, button, Figure.CASTLE, 0);
+                                        if (i1 == 0 && j1 == 0) {
+                                            blackLeftCastleMotion = true;
+                                        } else if (i1 == 7 && j1 == 0) {
+                                            blackRightCastleMotion = true;
+                                        }
+                                    }
+
+                                }
+
+                            }
+
+                            //TODO логика коня
+                            else if (field[selectedI][selectedJ].figure == Figure.KNIGHT) {
+                                if (field[selectedI][selectedJ].color == Color.WHITE) {
+                                    if ((j1 == selectedJ + 1 || j1 == selectedJ - 1) && (i1 == selectedI + 2 || i1 == selectedI - 2) ||
+                                            (j1 == selectedJ + 2 || j1 == selectedJ - 2) && (i1 == selectedI + 1 || i1 == selectedI - 1) &&
+                                                    field[i1][j1].color != Color.WHITE) {
+                                        doChanges(i1, j1, button, Figure.KNIGHT, 0);
+                                    }
+                                } else if ((j1 == selectedJ + 1 || j1 == selectedJ - 1) && (i1 == selectedI + 2 || i1 == selectedI - 2) ||
+                                        (j1 == selectedJ + 2 || j1 == selectedJ - 2) && (i1 == selectedI + 1 || i1 == selectedI - 1) &&
+                                                field[i1][j1].color != Color.BLACK) {
+                                    doChanges(i1, j1, button, Figure.KNIGHT, 0);
+                                }
+                            }
+
+                            //TODO логика офицера
+                            else if (field[selectedI][selectedJ].figure == Figure.BISHOP) {
+                                if (field[selectedI][selectedJ].color == Color.WHITE) {
+                                    if (Math.abs(selectedI - i1) == Math.abs(selectedJ - j1) && field[i1][j1].color != Color.WHITE && noObstacleForBishop(i1, j1)) {
+                                        doChanges(i1, j1, button, Figure.BISHOP, 0);
+                                    }
+                                } else if (Math.abs(selectedI - i1) == Math.abs(selectedJ - j1) && field[i1][j1].color != Color.BLACK && noObstacleForBishop(i1, j1)) {
+                                    doChanges(i1, j1, button, Figure.BISHOP, 0);
+
+                                }
+                            }
+                            //TODO логика ферзя
+                            else if (field[selectedI][selectedJ].figure == Figure.QUEEN) {
+                                if (field[selectedI][selectedJ].color == Color.WHITE) {
+                                    if (((j1 == selectedJ && i1 != selectedI && noObstacleForCastleI(i1, j1)) || (j1 != selectedJ && i1 == selectedI && noObstacleForCastleJ(i1, j1)))
+                                            && field[i1][j1].color != Color.WHITE) {
+                                        doChanges(i1, j1, button, Figure.QUEEN, 0);
+                                    } else if (Math.abs(selectedI - i1) == Math.abs(selectedJ - j1) && field[i1][j1].color != Color.WHITE && noObstacleForBishop(i1, j1)) {
+                                        doChanges(i1, j1, button, Figure.QUEEN, 0);
+                                    }
+                                } else if (((j1 == selectedJ && i1 != selectedI && noObstacleForCastleI(i1, j1)) || (j1 != selectedJ && i1 == selectedI && noObstacleForCastleJ(i1, j1)))
+                                        && field[i1][j1].color != Color.BLACK) {
+                                    doChanges(i1, j1, button, Figure.QUEEN, 0);
+                                } else if (Math.abs(selectedI - i1) == Math.abs(selectedJ - j1) && field[i1][j1].color != Color.BLACK && noObstacleForBishop(i1, j1)) {
+                                    doChanges(i1, j1, button, Figure.QUEEN, 0);
+
+                                }
+                            }
+
+                            //TODO локига короля
+                            else if (field[selectedI][selectedJ].figure == Figure.KING) {
+                                if (field[selectedI][selectedJ].color == Color.WHITE) {
+                                    if (!whiteKingMotion && i1 == selectedI && j1 == selectedJ + 2 && !whiteRightCastleMotion && field[i1][j1].figure == Figure.NON && selectedI == 7 && selectedJ == 4) {
+                                        doChanges(i1, j1, button, Figure.NON, -1);
+                                        whiteKingMotion = true;
+                                        whiteRightCastleMotion = true;
+                                    } else if (!whiteKingMotion && i1 == selectedI && j1 == selectedJ - 2 && !whiteLeftCastleMotion && field[i1][j1].figure == Figure.NON && selectedI == 7 && selectedJ == 4) {
+                                        doChanges(i1, j1, button, Figure.NON, 2);
+                                        whiteKingMotion = true;
+                                        whiteLeftCastleMotion = true;
+                                    } else if ((Math.abs(i1 - selectedI) == 1 && Math.abs(j1 - selectedJ) == 1 || Math.abs(i1 - selectedI) == 0 && Math.abs(j1 - selectedJ) == 1 || Math.abs(i1 - selectedI) == 1 && Math.abs(j1 - selectedJ) == 0)) {
+                                        if (((j1 == selectedJ && i1 != selectedI && noObstacleForCastleI(i1, j1)) || (j1 != selectedJ && i1 == selectedI && noObstacleForCastleJ(i1, j1)))
+                                                && field[i1][j1].color != Color.WHITE) {
+                                            whiteKingMotion = true;
+                                            doChanges(i1, j1, button, Figure.KING, 0);
+
+                                        } else if (Math.abs(selectedI - i1) == Math.abs(selectedJ - j1) && field[i1][j1].color != Color.WHITE && noObstacleForBishop(i1, j1)) {
+                                            whiteKingMotion = true;
+                                            doChanges(i1, j1, button, Figure.KING, 0);
+
+                                        }
+                                    }
+                                } else if (!blackKingMotion && i1 == selectedI && j1 == selectedJ + 2 && !blackRightCastleMotion && field[i1][j1].figure == Figure.NON && selectedI == 0 && selectedJ == 4) {
+                                    doChanges(i1, j1, button, Figure.NON, -1);
+                                    blackKingMotion = true;
+                                    blackRightCastleMotion = true;
+                                } else if (!blackKingMotion && i1 == selectedI && j1 == selectedJ - 2 && !blackLeftCastleMotion && field[i1][j1].figure == Figure.NON && selectedI == 0 && selectedJ == 4) {
+                                    doChanges(i1, j1, button, Figure.NON, 2);
+                                    blackKingMotion = true;
+                                    blackLeftCastleMotion = true;
+                                } else if ((Math.abs(i1 - selectedI) == 1 && Math.abs(j1 - selectedJ) == 1 || Math.abs(i1 - selectedI) == 0 && Math.abs(j1 - selectedJ) == 1 || Math.abs(i1 - selectedI) == 1 && Math.abs(j1 - selectedJ) == 0))
+                                    if (((j1 == selectedJ && i1 != selectedI && noObstacleForCastleI(i1, j1)) || (j1 != selectedJ && i1 == selectedI && noObstacleForCastleJ(i1, j1)))
+                                            && field[i1][j1].color != Color.BLACK) {
+                                        blackKingMotion = true;
+                                        doChanges(i1, j1, button, Figure.KING, 0);
+                                    } else if (Math.abs(selectedI - i1) == Math.abs(selectedJ - j1) && field[i1][j1].color != Color.BLACK && noObstacleForBishop(i1, j1)) {
+                                        blackKingMotion = true;
+                                        doChanges(i1, j1, button, Figure.KING, 0);
+                                    }
+                            }
+                            selected = null;
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
                         }
                     }
                 });
@@ -243,6 +258,13 @@ public class Board extends JFrame {
             setImageForButton(getButton(i1, j1), i1, j1);
             turn ^= 1;
         }
+    }
+
+    private boolean noCheckForYourKingAfter() {
+        boolean res = false;
+
+
+        return res;
     }
 
     private boolean yourTurn() {
@@ -310,8 +332,7 @@ public class Board extends JFrame {
         pw.flush();
         turn ^= 1;
         Integer res = is.read();
-        String s1 = res.toString();
-        return s1;
+        return res.toString();
     }
 
     private void doChanges(int i, int j, JButton button, Figure figure, int side) throws IOException {
@@ -457,8 +478,7 @@ public class Board extends JFrame {
         if (i == 0) {
             i = 9;
         }
-        Integer s1 = i * 1000 + j * 100 + selectedI * 10 + selectedJ;
-        return s1;
+        return i * 1000 + j * 100 + selectedI * 10 + selectedJ;
     }
 
     public static void main(String[] args) throws IOException {
@@ -477,7 +497,7 @@ public class Board extends JFrame {
         } else {
             tern = 1;
         }
-        boolean flag = true;
+//       boolean flag = true;
 //        while (flag) {
 //            Integer when = br.read();
 //            System.out.println(when);

@@ -26,6 +26,9 @@ public class ServerThread extends Thread {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            if (str1 == -1) {
+                break;
+            }
             System.out.println(str1);
             pw2.write(str1);
             pw2.flush();
@@ -34,6 +37,9 @@ public class ServerThread extends Thread {
                 str2 = br2.read();
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+            if (str2 == -1) {
+                break;
             }
             System.out.println(str2);
             pw1.write(str2);
