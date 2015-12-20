@@ -345,6 +345,7 @@ public class Board extends JFrame {
         System.out.println("here" + s1);
         System.out.println(yourTurn + " waiting opponet");
         String s = sendAndGet(s1);
+        System.out.println("i've got " + s);
         if (s.length() < 5) {
             int i1 = Character.getNumericValue(s.charAt(0));
             if (i1 == 9) {
@@ -494,17 +495,18 @@ public class Board extends JFrame {
         System.out.println(tern);
         if (tern == 48) {
             tern = 0;
+//            boolean flag = true;
+//            while (flag) {
+//                Integer when = br.read();
+//                System.out.println(when);
+//                if (when == 50) {
+//                    flag = false;
+//                }
+//            }
         } else {
             tern = 1;
         }
-//       boolean flag = true;
-//        while (flag) {
-//            Integer when = br.read();
-//            System.out.println(when);
-//            if (when == 48) {
-//                flag = false;
-//            }
-//        }
+
         System.out.println(tern);
         System.out.println("game starts");
         new Board(pw, br, tern);

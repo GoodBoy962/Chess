@@ -19,6 +19,8 @@ public class ServerThread extends Thread {
 
     @Override
     public void run() {
+//        pw1.print(200);
+//        pw1.flush();
         while (true) {
             Integer str1 = null;
             try {
