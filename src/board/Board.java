@@ -36,6 +36,11 @@ public class Board extends JFrame {
 
     public Board(PrintWriter pw, BufferedReader is, int yourTurn) throws IOException {
         this.yourTurn = yourTurn;
+        if (yourTurn()) {
+            setTitle("WHITE");
+        } else {
+            setTitle("BLACK");
+        }
         this.is = is;
         this.pw = pw;
         setBounds(50, 50, buttonSize * SIZE + 100, buttonSize * SIZE + 100);
@@ -242,6 +247,14 @@ public class Board extends JFrame {
         setVisible(true);
         if (!yourTurn()) {
             Integer a = is.read();
+            while (a / 1000 < 1) {
+                a = is.read();
+//                if (a == -1) {
+//                    this.setVisible(false);
+//                    this.dispose();
+//                }
+            }
+
             String s = a.toString();
             int i1 = Character.getNumericValue(s.charAt(0));
             if (i1 == 9) {
@@ -331,11 +344,19 @@ public class Board extends JFrame {
         pw.write(s);
         pw.flush();
         turn ^= 1;
+        System.out.println(yourTurn + " waiting opponet");
         Integer res = is.read();
+        while (res.toString().length() < 4) {
+            res = is.read();
+        }
+        System.out.println("[****]res" + res);
+        if (res == -1) {
+            return "end";
+        }
         return res.toString();
     }
 
-    private void doChanges(int i, int j, JButton button, Figure figure, int side) throws IOException {
+    private synchronized void doChanges(int i, int j, JButton button, Figure figure, int side) throws IOException {
         Integer s1;
         if (side == 0) {
             s1 = doStep(i, j, button, figure);
@@ -343,8 +364,14 @@ public class Board extends JFrame {
             s1 = doRockerovka(i, j, button, side);
         }
         System.out.println("here" + s1);
-        System.out.println(yourTurn + " waiting opponet");
+//        System.out.println(yourTurn + " waiting opponet");
         String s = sendAndGet(s1);
+        if (s.equals("end")) {
+            this.setVisible(false);
+            this.dispose();
+//            this.exit(0);
+//            this.setDefaultCloseOperation(0);
+        }
         System.out.println("i've got " + s);
         if (s.length() < 5) {
             int i1 = Character.getNumericValue(s.charAt(0));
@@ -450,7 +477,7 @@ public class Board extends JFrame {
         return res;
     }
 
-    private Integer doRockerovka(int i, int j, JButton button, int side) {
+    private synchronized Integer doRockerovka(int i, int j, JButton button, int side) {
         System.out.println(i + " " + j + " " + side);
         field[selectedI][selectedJ].figure = Figure.NON;
         field[i][j].color = field[selectedI][selectedJ].color;
@@ -469,7 +496,7 @@ public class Board extends JFrame {
         return s1;
     }
 
-    private Integer doStep(int i, int j, JButton button, Figure figure) {
+    private synchronized Integer doStep(int i, int j, JButton button, Figure figure) {
         field[i][j].figure = figure;
         field[selectedI][selectedJ].figure = Figure.NON;
         field[i][j].color = field[selectedI][selectedJ].color;
@@ -495,14 +522,14 @@ public class Board extends JFrame {
         System.out.println(tern);
         if (tern == 48) {
             tern = 0;
-//            boolean flag = true;
-//            while (flag) {
-//                Integer when = br.read();
-//                System.out.println(when);
-//                if (when == 50) {
-//                    flag = false;
-//                }
-//            }
+            boolean flag = true;
+            while (flag) {
+                Integer when = br.read();
+                System.out.println(when);
+                if (when == 48) {
+                    flag = false;
+                }
+            }
         } else {
             tern = 1;
         }

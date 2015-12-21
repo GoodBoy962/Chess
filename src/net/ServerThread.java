@@ -29,6 +29,8 @@ public class ServerThread extends Thread {
                 e.printStackTrace();
             }
             if (str1 == -1) {
+                pw2.write(-1);
+                System.out.println("to second send -1");
                 break;
             }
             System.out.println(str1);
@@ -41,6 +43,8 @@ public class ServerThread extends Thread {
                 e.printStackTrace();
             }
             if (str2 == -1) {
+                System.out.println("to first send -1");
+                pw1.write(-1);
                 break;
             }
             System.out.println(str2);
