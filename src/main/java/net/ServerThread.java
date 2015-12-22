@@ -6,6 +6,8 @@ import java.io.PrintWriter;
 
 public class ServerThread extends Thread {
 
+    private final int ERROR = 111;
+
     private PrintWriter pw1, pw2;
     private BufferedReader br1, br2;
 
@@ -25,12 +27,13 @@ public class ServerThread extends Thread {
             Integer str1 = null;
             try {
                 str1 = br1.read();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             if (str1 == -1) {
-                pw2.write(-1);
-                System.out.println("to second send -1");
+                pw2.write(ERROR);
+                pw2.flush();
+                System.out.println("to second send error");
                 break;
             }
             System.out.println(str1);
@@ -39,12 +42,13 @@ public class ServerThread extends Thread {
             Integer str2 = null;
             try {
                 str2 = br2.read();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             if (str2 == -1) {
-                System.out.println("to first send -1");
-                pw1.write(-1);
+                pw1.write(ERROR);
+                pw1.flush();
+                System.out.println("to first send error");
                 break;
             }
             System.out.println(str2);

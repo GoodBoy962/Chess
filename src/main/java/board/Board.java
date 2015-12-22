@@ -5,7 +5,6 @@ import enums.Figure;
 import enums.FigureColor;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -248,29 +247,35 @@ public class Board extends JFrame {
         setVisible(true);
         if (!yourTurn()) {
             Integer a = is.read();
-            while (a / 1000 < 1) {
-                a = is.read();
-//                if (a == -1) {
-//                    this.setVisible(false);
-//                    this.dispose();
-//                }
+//            while (a / 1000 < 1) {
+//                a = is.read();
+////                if (a == -1) {
+////                    this.setVisible(false);
+////                    this.dispose();
+////                }
+//            }
+            System.out.println("begin black" + a);
+            if (a == -1 || a == 111 || a == 100) {
+//                setName("NO SERVER CONNECTION");
+//                getDefaultCloseOperation();
+                dispose();
+            } else {
+                String s = a.toString();
+                int i1 = Character.getNumericValue(s.charAt(0));
+                if (i1 == 9) {
+                    i1 = 0;
+                }
+                int j1 = Character.getNumericValue(s.charAt(1));
+                int selectedI1 = Character.getNumericValue(s.charAt(2));
+                int selectedJ1 = Character.getNumericValue(s.charAt(3));
+                field[i1][j1].figure = field[selectedI1][selectedJ1].figure;
+                field[selectedI1][selectedJ1].figure = Figure.NON;
+                field[i1][j1].color = field[selectedI1][selectedJ1].color;
+                field[selectedI1][selectedJ1].color = Color.NON;
+                setImageForButton(getButton(selectedI1, selectedJ1), selectedI1, selectedJ1);
+                setImageForButton(getButton(i1, j1), i1, j1);
+                turn ^= 1;
             }
-
-            String s = a.toString();
-            int i1 = Character.getNumericValue(s.charAt(0));
-            if (i1 == 9) {
-                i1 = 0;
-            }
-            int j1 = Character.getNumericValue(s.charAt(1));
-            int selectedI1 = Character.getNumericValue(s.charAt(2));
-            int selectedJ1 = Character.getNumericValue(s.charAt(3));
-            field[i1][j1].figure = field[selectedI1][selectedJ1].figure;
-            field[selectedI1][selectedJ1].figure = Figure.NON;
-            field[i1][j1].color = field[selectedI1][selectedJ1].color;
-            field[selectedI1][selectedJ1].color = Color.NON;
-            setImageForButton(getButton(selectedI1, selectedJ1), selectedI1, selectedJ1);
-            setImageForButton(getButton(i1, j1), i1, j1);
-            turn ^= 1;
         }
     }
 
@@ -342,16 +347,34 @@ public class Board extends JFrame {
     }
 
     private String sendAndGet(Integer s) throws IOException {
-        pw.write(s);
+//        System.out.println(s.);
+        System.out.println("Int value " + s.intValue());
+        pw.write(s.intValue());
         pw.flush();
         turn ^= 1;
         System.out.println(yourTurn + " waiting opponet");
         Integer res = is.read();
+        System.out.println(res);
+        if (res == 111) {
+            dispose();
+            getDefaultCloseOperation();
+        }
+        if (res < 100) {
+            res = is.read();
+            System.out.println("[smth  ] :" + res);
+        }
+        if (res == 8888 || res == 111 || res == -1 || res == 10 || res == 100) {
+            getDefaultCloseOperation();
+            System.out.println("I am here");
+            dispose();
+        }
         while (res.toString().length() < 4) {
             res = is.read();
         }
         System.out.println("[****]res" + res);
         if (res == -1) {
+            setName("NO SERVER CONNECTION");
+            getDefaultCloseOperation();
             return "end";
         }
         return res.toString();
@@ -531,6 +554,13 @@ public class Board extends JFrame {
     }
 
     public static void main(String[] args) throws IOException {
+//        JFrame helloFrame = new JFrame("Hello");
+//        helloFrame.setBounds(50, 50, 40, 20);
+//        helloFrame.setVisible(true);
+//        helloFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+//        JButton jb = new JButton();
+//        jb.setName("Connect");
+//        helloFrame.add(jb);
         int port = 3456;
         String host = "192.168.1.2";
         Socket s = new Socket(host, port);
